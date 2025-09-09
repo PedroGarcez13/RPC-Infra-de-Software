@@ -5,58 +5,155 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exclusão Mútua com RPC</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-network-wired"></i> RPC & Exclusão Mútua</h3>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="#introducao" data-section="introducao"><i class="fas fa-home"></i> Introdução</a></li>
+            <li><a href="#rpc-abstraction" data-section="rpc-abstraction"><i class="fas fa-cloud"></i> Abstração RPC</a></li>
+            <li><a href="#desafios" data-section="desafios"><i class="fas fa-exclamation-triangle"></i> Desafios</a></li>
+            <li><a href="#vantagens-desvantagens" data-section="vantagens-desvantagens"><i class="fas fa-balance-scale"></i> Prós & Contras</a></li>
+            <li><a href="#demonstracao" data-section="demonstracao"><i class="fas fa-code"></i> Demonstração</a></li>
+            <li><a href="#conclusao" data-section="conclusao"><i class="fas fa-check-circle"></i> Conclusão</a></li>
+        </ul>
+    </nav>
 
-    <header>
-        <h1>Exclusão Mútua em Sistemas Distribuídos: A Solução por Passagem de Mensagens via RPC</h1>
-    </header>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <main>
-        <section id="intro-rpc">
-            <h2>Abstraindo a Complexidade com RPC</h2>
-            <p>A Chamada de Procedimento Remoto (RPC) é um poderoso modelo de comunicação que permite que um programa execute um procedimento em outra máquina na rede como se fosse uma chamada local. Com o RPC, o programador não precisa lidar diretamente com os detalhes de baixo nível, como serialização de dados (marshalling), sockets ou protocolos de rede. </p>
-            <p>No contexto da exclusão mútua, essa abstração é fundamental. Cada processo no sistema distribuído assume um duplo papel: atua como um <strong>cliente</strong> quando deseja acessar uma seção crítica e como um <strong>servidor</strong> ao responder às solicitações de outros processos. A troca de mensagens necessária para algoritmos de exclusão mútua é elegantemente mapeada para chamadas de procedimentos remotos. </p>
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <main class="main-content">
+        <!-- Cabeçalho -->
+        <header id="introducao">
+            <div class="header-content">
+                <h1>Exclusão Mútua em Sistemas Distribuídos: A Solução por Passagem de Mensagens via RPC</h1>
+
+            </div>
+        </header>
+
+        <!-- Seção: Abstração RPC -->
+        <section id="rpc-abstraction" class="content-section">
+            <div class="section-header">
+                <h2><i class="fas fa-cloud"></i> Abstraindo a Complexidade com RPC</h2>
+           
+            </div>
+            <div class="section-content">
+                <p>A Chamada de Procedimento Remoto (RPC) é um poderoso modelo de comunicação que permite que um programa execute um procedimento em outra máquina na rede como se fosse uma chamada local. Com o RPC, o programador não precisa lidar diretamente com os detalhes de baixo nível, como serialização de dados (marshalling), sockets ou protocolos de rede.</p>
+                
+                <p>No contexto da exclusão mútua, essa abstração é fundamental. Cada processo no sistema distribuído assume um duplo papel: atua como um cliente quando deseja acessar uma seção crítica e como um servidor ao responder às solicitações de outros processos. A troca de mensagens necessária para algoritmos de exclusão mútua é elegantemente mapeada para chamadas de procedimentos remotos.</p>
+            </div>
         </section>
 
-        <section id="desafio">
-            <h2>O Desafio da Exclusão Mútua em Ambientes Distribuídos</h2>
-            <p>Em sistemas centralizados, a exclusão mútua é resolvida com primitivas como semáforos e mutexes, que dependem de memória compartilhada e de um kernel único. Em sistemas distribuídos, essa abordagem não é viável devido a desafios inerentes: </p>
-            <ul>
-                <li><strong>Ausência de Memória Compartilhada:</strong> O estado global não está disponível em um único local, e cada processo possui apenas sua visão parcial do sistema. </li>
-                <li><strong>Ausência de um Relógio Global:</strong> É impossível determinar a ordem exata de eventos que ocorrem em máquinas diferentes, o que complica a coordenação. </li>
-                <li><strong>Latência e Falhas na Rede:</strong> A comunicação está sujeita a atrasos imprevisíveis e à perda de mensagens, exigindo que os algoritmos sejam tolerantes a falhas. </li>
-            </ul>
-        </section>
-
-        <section id="vantagens-desvantagens">
-            <h2>Vantagens e Desvantagens do Uso de RPC</h2>
-            <div class="colunas">
-                <div class="vantagens">
-                    <h3>Vantagens</h3>
-                    <ul>
-                        <li><strong>Abstração e Simplicidade:</strong> O modelo de chamada de procedimento esconde a complexidade da comunicação em rede, simplificando o desenvolvimento. </li>
-                        <li><strong>Clareza do Código:</strong> A lógica de coordenação se assemelha a simples chamadas de função, tornando o código mais legível e fácil de manter. </li>
-                        <li><strong>Reutilização:</strong> Os componentes de cliente e servidor (stubs) gerados por ferramentas RPC podem ser facilmente reutilizados em diferentes partes do sistema. </li>
-                    </ul>
-                </div>
-                <div class="desvantagens">
-                    <h3>Desvantagens</h3>
-                    <ul>
-                        <li><strong>Acoplamento Síncrono:</strong> Por padrão, RPCs são bloqueantes, o que significa que o cliente para até receber uma resposta. Isso pode causar ineficiência se um servidor estiver lento ou falhar. O uso de chamadas assíncronas é crucial para mitigar esse problema. </li>
-                        <li><strong>Overhead:</strong> A abstração do RPC pode introduzir uma sobrecarga de desempenho devido às camadas de serialização e desserialização de dados.</li>
-                        <li><strong>Gestão de Falhas:</strong> Lidar com a falha de um processo servidor é complexo, pois o cliente pode ficar bloqueado indefinidamente. Mecanismos como timeouts são essenciais.</li>
-                    </ul>
+        <!-- Seção: Desafios -->
+        <section id="desafios" class="content-section">
+            <div class="section-header">
+                <h2><i class="fas fa-exclamation-triangle"></i> O Desafio da Exclusão Mútua em Ambientes Distribuídos</h2>
+           
+            </div>
+            <div class="section-content">
+                <p>Em sistemas centralizados, a exclusão mútua é resolvida com primitivas como semáforos e mutexes, que dependem de memória compartilhada e de um kernel único. Em sistemas distribuídos, essa abordagem não é viável devido a desafios inerentes:</p>
+                
+                <div class="challenges-grid">
+                    <div class="challenge-card">
+                        <div class="challenge-icon">
+                            <i class="fas fa-memory"></i>
+                        </div>
+                        <h4>Ausência de Memória Compartilhada</h4>
+                        <p>O estado global não está disponível em um único local, e cada processo possui apenas sua visão parcial do sistema.</p>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <div class="challenge-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h4>Ausência de um Relógio Global</h4>
+                        <p>É impossível determinar a ordem exata de eventos que ocorrem em máquinas diferentes, o que complica a coordenação.</p>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <div class="challenge-icon">
+                            <i class="fas fa-wifi"></i>
+                        </div>
+                        <h4>Latência e Falhas na Rede</h4>
+                        <p>A comunicação está sujeita a atrasos imprevisíveis e à perda de mensagens, exigindo que os algoritmos sejam tolerantes a falhas.</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section id="demonstracao">
-            <h2>Demonstração Prática</h2>
-            <p>A seguir, apresentamos um exemplo de algoritmo que utiliza RPC para garantir a exclusão mútua. O código demonstra como um cliente solicita acesso à seção crítica e como o servidor gerencia os pedidos.</p>
-            <div class="code-container">
-                <pre><code>
-// Insira aqui o código da sua demonstração.
+        <section id="vantagens-desvantagens" class="content-section">
+            <div class="section-header">
+                <h2><i class="fas fa-balance-scale"></i> Vantagens e Desvantagens do Uso de RPC</h2>
+
+            </div>
+            <div class="section-content">
+                <div class="pros-cons-container">
+                    <div class="pros-section">
+                        <div class="pros-header">
+                            <i class="fas fa-thumbs-up"></i>
+                            <h3>Vantagens</h3>
+                        </div>
+                        <ul class="pros-list">
+                            <li>
+                                <strong>Abstração e Simplicidade:</strong> O modelo de chamada de procedimento esconde a complexidade da comunicação em rede, simplificando o desenvolvimento.
+                            </li>
+                            <li>
+                                <strong>Clareza do Código:</strong> A lógica de coordenação se assemelha a simples chamadas de função, tornando o código mais legível e fácil de manter.
+                            </li>
+                            <li>
+                                <strong>Reutilização:</strong> Os componentes de cliente e servidor (stubs) gerados por ferramentas RPC podem ser facilmente reutilizados em diferentes partes do sistema.
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="cons-section">
+                        <div class="cons-header">
+                            <i class="fas fa-thumbs-down"></i>
+                            <h3>Desvantagens</h3>
+                        </div>
+                        <ul class="cons-list">
+                            <li>
+                                <strong>Acoplamento Síncrono:</strong> Por padrão, RPCs são bloqueantes, o que significa que o cliente para até receber uma resposta. Isso pode causar ineficiência se um servidor estiver lento ou falhar. O uso de chamadas assíncronas é crucial para mitigar esse problema.
+                            </li>
+                            <li>
+                                <strong>Overhead:</strong> A abstração do RPC pode introduzir uma sobrecarga de desempenho devido às camadas de serialização e desserialização de dados.
+                            </li>
+                            <li>
+                                <strong>Gestão de Falhas:</strong> Lidar com a falha de um processo servidor é complexo, pois o cliente pode ficar bloqueado indefinidamente. Mecanismos como timeouts são essenciais.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="demonstracao" class="content-section">
+            <div class="section-header">
+                <h2><i class="fas fa-code"></i> Demonstração Prática</h2>
+            </div>
+            <div class="section-content">
+                <p>A seguir, apresentamos um exemplo de algoritmo que utiliza RPC para garantir a exclusão mútua. O código demonstra como um cliente solicita acesso à seção crítica e como o servidor gerencia os pedidos.</p>
+                
+                <div class="code-section">
+                    <div class="code-header">
+                        <span class="code-title">
+                        </span>
+                        <button class="btn btn-small copy-code" onclick="copyCode()">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                    <div class="code-container">
+                        <pre><code id="codeBlock">// Insira aqui o código da sua demonstração.
 // Exemplo:
 // client.go
 func requestCriticalSection(client *rpc.Client) {
@@ -71,21 +168,29 @@ func requestCriticalSection(client *rpc.Client) {
     // Saiu da seção crítica
     client.Call("MutexServer.Release", os.Getpid(), &reply)
     fmt.Println("Processo", os.Getpid(), "saiu da seção crítica.")
-}
-                </code></pre>
+}</code></pre>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <section id="conclusao">
-            <h2>Conclusão</h2>
-            <p>O uso de RPC oferece uma solução estruturada e compreensível para o problema da exclusão mútua em sistemas distribuídos. Ao modelar algoritmos complexos, como os de Ricart-Agrawala, como serviços remotos, os desenvolvedores podem focar na lógica de coordenação em vez dos detalhes de baixo nível da comunicação. Embora a natureza síncrona do RPC exija cuidado para garantir eficiência e robustez, sua clareza e simplicidade o tornam uma ferramenta poderosa para construir sistemas distribuídos corretos e confiáveis. </p>
+        <section id="conclusao" class="content-section">
+            <div class="section-header">
+                <h2><i class="fas fa-check-circle"></i> Conclusão</h2>
+            </div>
+            <div class="section-content">
+                <p>O uso de RPC oferece uma solução estruturada e compreensível para o problema da exclusão mútua em sistemas distribuídos. Ao modelar algoritmos complexos, como os de Ricart-Agrawala, como serviços remotos, os desenvolvedores podem focar na lógica de coordenação em vez dos detalhes de baixo nível da comunicação. Embora a natureza síncrona do RPC exija cuidado para garantir eficiência e robustez, sua clareza e simplicidade o tornam uma ferramenta poderosa para construir sistemas distribuídos corretos e confiáveis.</p>
+
+            </div>
         </section>
 
+        <footer>
+            <div class="footer-content">
+                <p><i class="fas fa-users"></i> Desenvolvido pelos alunos Clarissa Lopes, Denys Sales, José Vitor, Pedro Abner e Rafael Padilha para a disciplina de Infraestrutura de Software</p>
+            </div>
+        </footer>
     </main>
 
-    <footer>
-        <p>Desenvolvido por Pedro, Rafael, Denys, Clarissa e José para a disciplina de Sistemas Distribuídos</p>
-    </footer>
-
+    <script src="script.js"></script>
 </body>
 </html>
