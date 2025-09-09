@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exclusão Mútua com RPC</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Exclusão Mútua em Sistemas Distribuídos: A Solução por Passagem de Mensagens via RPC</h1>
+    </header>
+
+    <main>
+        <section id="intro-rpc">
+            <h2>Abstraindo a Complexidade com RPC</h2>
+            [cite_start]<p>A Chamada de Procedimento Remoto (RPC) é um poderoso modelo de comunicação que permite que um programa execute um procedimento em outra máquina na rede como se fosse uma chamada local. [cite: 3] [cite_start]Com o RPC, o programador não precisa lidar diretamente com os detalhes de baixo nível, como serialização de dados (marshalling), sockets ou protocolos de rede. [cite: 4]</p>
+            <p>No contexto da exclusão mútua, essa abstração é fundamental. [cite_start]Cada processo no sistema distribuído assume um duplo papel: atua como um <strong>cliente</strong> quando deseja acessar uma seção crítica e como um <strong>servidor</strong> ao responder às solicitações de outros processos. [cite: 5] [cite_start]A troca de mensagens necessária para algoritmos de exclusão mútua é elegantemente mapeada para chamadas de procedimentos remotos. [cite: 6]</p>
+        </section>
+
+        <section id="desafio">
+            <h2>O Desafio da Exclusão Mútua em Ambientes Distribuídos</h2>
+            [cite_start]<p>Em sistemas centralizados, a exclusão mútua é resolvida com primitivas como semáforos e mutexes, que dependem de memória compartilhada e de um kernel único. [cite: 8] [cite_start]Em sistemas distribuídos, essa abordagem não é viável devido a desafios inerentes: [cite: 9]</p>
+            <ul>
+                [cite_start]<li><strong>Ausência de Memória Compartilhada:</strong> O estado global não está disponível em um único local, e cada processo possui apenas sua visão parcial do sistema. [cite: 13, 14]</li>
+                [cite_start]<li><strong>Ausência de um Relógio Global:</strong> É impossível determinar a ordem exata de eventos que ocorrem em máquinas diferentes, o que complica a coordenação. [cite: 15]</li>
+                [cite_start]<li><strong>Latência e Falhas na Rede:</strong> A comunicação está sujeita a atrasos imprevisíveis e à perda de mensagens, exigindo que os algoritmos sejam tolerantes a falhas. [cite: 16]</li>
+            </ul>
+        </section>
+
+        <section id="vantagens-desvantagens">
+            <h2>Vantagens e Desvantagens do Uso de RPC</h2>
+            <div class="colunas">
+                <div class="vantagens">
+                    <h3>Vantagens</h3>
+                    <ul>
+                        [cite_start]<li><strong>Abstração e Simplicidade:</strong> O modelo de chamada de procedimento esconde a complexidade da comunicação em rede, simplificando o desenvolvimento. [cite: 19]</li>
+                        [cite_start]<li><strong>Clareza do Código:</strong> A lógica de coordenação se assemelha a simples chamadas de função, tornando o código mais legível e fácil de manter. [cite: 20]</li>
+                        [cite_start]<li><strong>Reutilização:</strong> Os componentes de cliente e servidor (stubs) gerados por ferramentas RPC podem ser facilmente reutilizados em diferentes partes do sistema. [cite: 21]</li>
+                    </ul>
+                </div>
+                <div class="desvantagens">
+                    <h3>Desvantagens</h3>
+                    <ul>
+                        [cite_start]<li><strong>Acoplamento Síncrono:</strong> Por padrão, RPCs são bloqueantes, o que significa que o cliente para até receber uma resposta. [cite: 24] [cite_start]Isso pode causar ineficiência se um servidor estiver lento ou falhar. [cite: 25] [cite_start]O uso de chamadas assíncronas é crucial para mitigar esse problema. [cite: 26]</li>
+                        [cite_start]<li><strong>Overhead:</strong> A abstração do RPC pode introduzir uma sobrecarga de desempenho devido às camadas de serialização e desserialização de dados. [cite: 27]</li>
+                        [cite_start]<li><strong>Gestão de Falhas:</strong> Lidar com a falha de um processo servidor é complexo, pois o cliente pode ficar bloqueado indefinidamente. [cite: 28, 29] [cite_start]Mecanismos como timeouts são essenciais. [cite: 29]</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="demonstracao">
+            <h2>Demonstração Prática</h2>
+            <p>A seguir, apresentamos um exemplo de algoritmo que utiliza RPC para garantir a exclusão mútua. O código demonstra como um cliente solicita acesso à seção crítica e como o servidor gerencia os pedidos.</p>
+            <div class="code-container">
+                <pre><code>
+// Insira aqui o código da sua demonstração.
+// Exemplo:
+// client.go
+func requestCriticalSection(client *rpc.Client) {
+    var reply bool
+    err := client.Call("MutexServer.Request", os.Getpid(), &reply)
+    if err != nil {
+        log.Fatal("RPC error:", err)
+    }
+    // Entrou na seção crítica
+    fmt.Println("Processo", os.Getpid(), "entrou na seção crítica.")
+    time.Sleep(2 * time.Second)
+    // Saiu da seção crítica
+    client.Call("MutexServer.Release", os.Getpid(), &reply)
+    fmt.Println("Processo", os.Getpid(), "saiu da seção crítica.")
+}
+                </code></pre>
+            </div>
+        </section>
+
+        <section id="conclusao">
+            <h2>Conclusão</h2>
+            [cite_start]<p>O uso de RPC oferece uma solução estruturada e compreensível para o problema da exclusão mútua em sistemas distribuídos. [cite: 31] [cite_start]Ao modelar algoritmos complexos, como os de Ricart-Agrawala, como serviços remotos, os desenvolvedores podem focar na lógica de coordenação em vez dos detalhes de baixo nível da comunicação. [cite: 32] [cite_start]Embora a natureza síncrona do RPC exija cuidado para garantir eficiência e robustez, sua clareza e simplicidade o tornam uma ferramenta poderosa para construir sistemas distribuídos corretos e confiáveis. [cite: 33]</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Desenvolvido por [Seu Nome/Grupo] para a disciplina de Sistemas Distribuídos</p>
+    </footer>
+
+</body>
+</html>
