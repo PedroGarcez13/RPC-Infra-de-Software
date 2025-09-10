@@ -142,33 +142,103 @@
                 <h2><i class="fas fa-code"></i> Demonstração Prática</h2>
             </div>
             <div class="section-content">
-                <p>A seguir, apresentamos um exemplo de algoritmo que utiliza RPC para garantir a exclusão mútua. O código demonstra como um cliente solicita acesso à seção crítica e como o servidor gerencia os pedidos.</p>
+                <p>A seguir, apresentamos um exemplo de algoritmo que utiliza RPC para garantir a exclusão mútua. O código demonstra como um professor (servidor) gerencia as solicitações de ajuda dos alunos (clientes).</p>
                 
+                <!-- Código do Servidor (Professor) -->
                 <div class="code-section">
                     <div class="code-header">
                         <span class="code-title">
+                            <i class="fas fa-server"></i> professor_servidor.py (Servidor)
                         </span>
-                        <button class="btn btn-small copy-code" onclick="copyCode()">
+                        <button class="btn btn-small copy-code" onclick="copyCode('serverCode')">
                             <i class="fas fa-copy"></i> Copiar
                         </button>
                     </div>
                     <div class="code-container">
-                        <pre><code id="codeBlock">// Insira aqui o código da sua demonstração.
-// Exemplo:
-// client.go
-func requestCriticalSection(client *rpc.Client) {
-    var reply bool
-    err := client.Call("MutexServer.Request", os.Getpid(), &reply)
-    if err != nil {
-        log.Fatal("RPC error:", err)
-    }
-    // Entrou na seção crítica
-    fmt.Println("Processo", os.Getpid(), "entrou na seção crítica.")
-    time.Sleep(2 * time.Second)
-    // Saiu da seção crítica
-    client.Call("MutexServer.Release", os.Getpid(), &reply)
-    fmt.Println("Processo", os.Getpid(), "saiu da seção crítica.")
-}</code></pre>
+                        <pre><code id="serverCode">import time
+from xmlrpc.server import SimpleXMLRPCServer
+
+def ajudar_aluno(aluno_id):
+    print(f"[PROFESSOR]: Recebi uma solicitação de ajuda do Aluno {aluno_id}.")
+    time.sleep(2)
+    print(f"[PROFESSOR]: Ajudei o Aluno {aluno_id}. Enviando a resposta.")
+    return f"Ajuda concluída com sucesso para o Aluno {aluno_id}."
+
+with SimpleXMLRPCServer(("localhost", 8000)) as servidor:
+    print("Servidor do Professor online e aguardando chamadas RPC...")
+    servidor.register_function(ajudar_aluno, "ajudar_aluno")
+    servidor.serve_forever()</code></pre>
+                    </div>
+                </div>
+
+                <!-- Código do Cliente (Aluno) -->
+                <div class="code-section">
+                    <div class="code-header">
+                        <span class="code-title">
+                            <i class="fas fa-user"></i> aluno_cliente.py (Cliente)
+                        </span>
+                        <button class="btn btn-small copy-code" onclick="copyCode('clientCode')">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                    <div class="code-container">
+                        <pre><code id="clientCode">import xmlrpc.client
+import time
+
+def solicitar_ajuda_aluno(aluno_id, professor):
+    print(f"[ALUNO {aluno_id}]: Preciso de ajuda do professor. Fazendo chamada RPC...")
+
+    resultado = professor.ajudar_aluno(aluno_id)
+    
+    print(f"[ALUNO {aluno_id}]: Recebi a resposta remota: '{resultado}'")
+    print(f"[ALUNO {aluno_id}]: Tarefa finalizada.")
+
+try:
+    with xmlrpc.client.ServerProxy("http://localhost:8000/") as professor:
+        solicitar_ajuda_aluno(1, professor)
+
+        solicitar_ajuda_aluno(2, professor)
+
+except ConnectionRefusedError:
+    print("Erro: Servidor não encontrado. Verifique se 'professor_servidor.py' está rodando.")</code></pre>
+                    </div>
+                </div>
+
+                <!-- Terminais de Demonstração -->
+                <div class="terminals-container">
+                    <!-- Terminal do Servidor -->
+                    <div class="terminal-section">
+                        <div class="terminal-header">
+                            <span class="terminal-title">
+                                <i class="fas fa-terminal"></i> Terminal - Servidor (Professor)
+                            </span>
+                        </div>
+                        <div class="terminal-container">
+                            <pre><code class="terminal-output">$ python professor_servidor.py
+Servidor do Professor online e aguardando chamadas RPC...
+[PROFESSOR]: Recebi uma solicitação de ajuda do Aluno 1.
+[PROFESSOR]: Ajudei o Aluno 1. Enviando a resposta.
+[PROFESSOR]: Recebi uma solicitação de ajuda do Aluno 2.
+[PROFESSOR]: Ajudei o Aluno 2. Enviando a resposta.</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Terminal do Cliente -->
+                    <div class="terminal-section">
+                        <div class="terminal-header">
+                            <span class="terminal-title">
+                                <i class="fas fa-terminal"></i> Terminal - Cliente (Alunos)
+                            </span>
+                        </div>
+                        <div class="terminal-container">
+                            <pre><code class="terminal-output">$ python aluno_cliente.py
+[ALUNO 1]: Preciso de ajuda do professor. Fazendo chamada RPC...
+[ALUNO 1]: Recebi a resposta remota: 'Ajuda concluída com sucesso para o Aluno 1.'
+[ALUNO 1]: Tarefa finalizada.
+[ALUNO 2]: Preciso de ajuda do professor. Fazendo chamada RPC...
+[ALUNO 2]: Recebi a resposta remota: 'Ajuda concluída com sucesso para o Aluno 2.'
+[ALUNO 2]: Tarefa finalizada.</code></pre>
+                        </div>
                     </div>
                 </div>
             </div>

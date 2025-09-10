@@ -5,10 +5,16 @@ const mobileMenuBtn = document.getElementById("mobileMenuBtn")
 const sidebarToggle = document.getElementById("sidebarToggle")
 const sidebarLinks = document.querySelectorAll(".sidebar-menu a")
 
+// Variáveis para terminais funcionais
+let serverRunning = false
+let clientRequests = []
+
 // Inicialização
 document.addEventListener("DOMContentLoaded", () => {
   initializeSidebar()
   highlightActiveSection()
+  initializeLazyLoading()
+  setTimeout(initializeTerminals, 100) // Pequeno delay para garantir que o DOM está pronto
 })
 
 // Gerenciamento da sidebar
@@ -62,7 +68,6 @@ function scrollToSection(sectionId) {
 function copyCode(codeId = "codeBlock") {
   const codeBlock = document.getElementById(codeId)
   if (!codeBlock) {
-    showToast("Erro: Bloco de código não encontrado!")
     return
   }
   
@@ -72,7 +77,7 @@ function copyCode(codeId = "codeBlock") {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        showToast("Código copiado para a área de transferência!")
+        // Código copiado com sucesso
       })
       .catch(() => {
         fallbackCopyTextToClipboard(text)
@@ -96,105 +101,15 @@ function fallbackCopyTextToClipboard(text) {
 
   try {
     document.execCommand("copy")
-    showToast("Código copiado para a área de transferência!")
+    // Código copiado com sucesso
   } catch (err) {
-    showToast("Erro ao copiar código")
+    // Erro ao copiar código
   }
 
   document.body.removeChild(textArea)
 }
 
-// Sistema de toast/notificação
-function showToast(message) {
-  // Remove toast existente se houver
-  const existingToast = document.querySelector(".toast")
-  if (existingToast) {
-    existingToast.remove()
-  }
-
-  // Criar novo toast
-  const toast = document.createElement("div")
-  toast.className = "toast"
-  toast.innerHTML = `
-        <i class="fas fa-check-circle"></i>
-        <span>${message}</span>
-    `
-
-  // Estilos do toast
-  toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: var(--success-color);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 6px;
-        box-shadow: var(--shadow);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        z-index: 10000;
-        animation: slideInRight 0.3s ease-out;
-        font-size: 0.9rem;
-        font-weight: 500;
-    `
-
-  document.body.appendChild(toast)
-
-  // Remover toast após 3 segundos
-  setTimeout(() => {
-    toast.style.animation = "slideOutRight 0.3s ease-out"
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast)
-      }
-    }, 300)
-  }, 3000)
-}
-
-// Adicionar animações CSS para o toast
-const toastStyles = document.createElement("style")
-toastStyles.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-`
-document.head.appendChild(toastStyles)
-
-// Fechar sidebar ao redimensionar para desktop
-window.addEventListener("resize", () => {
-  if (window.innerWidth >= 768) {
-    closeSidebar()
-  }
-})
-
-// Navegação por teclado
-document.addEventListener("keydown", (e) => {
-  // ESC para fechar sidebar
-  if (e.key === "Escape") {
-    closeSidebar()
-  }
-})
-
-// Lazy loading para melhor performance
+// Lazy loading de imagens
 function initializeLazyLoading() {
   const images = document.querySelectorAll("img[data-src]")
 
@@ -220,9 +135,6 @@ function initializeLazyLoading() {
   }
 }
 
-// Inicializar lazy loading quando o DOM estiver pronto
-document.addEventListener("DOMContentLoaded", initializeLazyLoading)
-
 // Função para destacar a seção ativa
 function highlightActiveSection() {
   const sections = document.querySelectorAll(".content-section, header")
@@ -246,11 +158,19 @@ function highlightActiveSection() {
   })
 }
 
-// Funcionalidade dos terminais interativos
-let serverRunning = false
-let clientRequests = []
+// Event listener para scroll
+window.addEventListener("scroll", highlightActiveSection)
 
+// Funcionalidade dos terminais interativos
 function initializeTerminals() {
+  // Verificar se os terminais existem na página
+  const serverTerminal = document.querySelector('.terminal-section:first-of-type .terminal-header')
+  const clientTerminal = document.querySelector('.terminal-section:last-of-type .terminal-header')
+  
+  if (!serverTerminal || !clientTerminal) {
+    return // Não há terminais na página atual
+  }
+  
   // Adicionar botões de controle aos terminais
   addTerminalControls()
   
@@ -267,10 +187,10 @@ function addTerminalControls() {
   serverControls.className = 'terminal-controls'
   serverControls.innerHTML = `
     <button class="terminal-btn" onclick="startServer()" id="startServerBtn">
-      <i class="fas fa-play"></i> Iniciar Servidor
+      <i class="fas fa-play"></i> Iniciar
     </button>
     <button class="terminal-btn" onclick="stopServer()" id="stopServerBtn" disabled>
-      <i class="fas fa-stop"></i> Parar Servidor
+      <i class="fas fa-stop"></i> Parar
     </button>
   `
   
@@ -279,7 +199,7 @@ function addTerminalControls() {
   clientControls.className = 'terminal-controls'
   clientControls.innerHTML = `
     <button class="terminal-btn" onclick="runClient()" id="runClientBtn" disabled>
-      <i class="fas fa-play"></i> Executar Cliente
+      <i class="fas fa-play"></i> Executar
     </button>
     <button class="terminal-btn" onclick="clearTerminals()" id="clearBtn">
       <i class="fas fa-trash"></i> Limpar
@@ -294,8 +214,10 @@ function clearTerminals() {
   const serverOutput = document.querySelector('.terminal-section:first-of-type .terminal-output')
   const clientOutput = document.querySelector('.terminal-section:last-of-type .terminal-output')
   
-  serverOutput.textContent = '$ python professor_servidor.py'
-  clientOutput.textContent = '$ python aluno_cliente.py'
+  if (serverOutput && clientOutput) {
+    serverOutput.textContent = '$ python professor_servidor.py'
+    clientOutput.textContent = '$ python aluno_cliente.py'
+  }
   
   serverRunning = false
   clientRequests = []
@@ -307,13 +229,17 @@ function updateButtonStates() {
   const stopBtn = document.getElementById('stopServerBtn')
   const clientBtn = document.getElementById('runClientBtn')
   
-  startBtn.disabled = serverRunning
-  stopBtn.disabled = !serverRunning
-  clientBtn.disabled = !serverRunning
+  if (startBtn && stopBtn && clientBtn) {
+    startBtn.disabled = serverRunning
+    stopBtn.disabled = !serverRunning
+    clientBtn.disabled = !serverRunning
+  }
 }
 
 function startServer() {
   const serverOutput = document.querySelector('.terminal-section:first-of-type .terminal-output')
+  
+  if (!serverOutput) return
   
   serverOutput.textContent = '$ python professor_servidor.py'
   
@@ -321,27 +247,28 @@ function startServer() {
     serverOutput.textContent += '\nServidor do Professor online e aguardando chamadas RPC...'
     serverRunning = true
     updateButtonStates()
-    showToast('Servidor iniciado com sucesso!')
   }, 500)
 }
 
 function stopServer() {
   const serverOutput = document.querySelector('.terminal-section:first-of-type .terminal-output')
   
+  if (!serverOutput) return
+  
   serverOutput.textContent += '\n^C\nServidor interrompido pelo usuário.'
   serverRunning = false
   updateButtonStates()
-  showToast('Servidor parado!')
 }
 
 function runClient() {
   if (!serverRunning) {
-    showToast('Erro: Servidor não está rodando!')
     return
   }
   
   const clientOutput = document.querySelector('.terminal-section:last-of-type .terminal-output')
   const serverOutput = document.querySelector('.terminal-section:first-of-type .terminal-output')
+  
+  if (!clientOutput || !serverOutput) return
   
   clientOutput.textContent = '$ python aluno_cliente.py'
   
@@ -408,13 +335,4 @@ function simulateClientExecution(clientOutput, serverOutput) {
   }
   
   executeStep()
-}
-
-// Inicializar terminais quando a página carrega
-document.addEventListener("DOMContentLoaded", () => {
-  initializeSidebar()
-  highlightActiveSection()
-  setTimeout(initializeTerminals, 100) // Pequeno delay para garantir que o DOM está pronto
-    }
-  })
 }
